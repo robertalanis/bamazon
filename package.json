@@ -1,0 +1,27 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robertalanis/bamazon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robertalanis/bamazon/issues"
+  },
+  "homepage": "https://github.com/robertalanis/bamazon#readme",
+  "dependencies": {
+    "chalk": "^4.0.0",
+    "cli-table3": "^0.6.0",
+    "inquirer": "^7.1.0",
+    "numeral": "^2.0.6",
+    "terminalizer": "^0.7.1"
+  }
+}
