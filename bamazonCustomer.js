@@ -21,30 +21,45 @@ var connection = mysql.createConnection({
 });
 
 connection.connect(function (err) {
-  clear();
-  greetCustomer();
+  clear()
+  console.log("Welcome to BAMAZON".random);
+  mainPrompt()
 });
 
-function greetCustomer() {
+var cart = []
+
+//Greet Customer
+function mainPrompt() {
   inquirer
     .prompt([
       {
-        name: "enterStore",
+        name: "action",
         type: "list",
-        message: "Welcome to " + "BAMAZON".rainbow +" Would you like to make a purchase?",
-        choices: ["yes", "no"],
+        message: "Select an action:",
+        choices: ["Add Item to Cart", "Check Out", "Exit"],
       },
     ])
     .then(function (answers) {
-      if (answers.enterStore === "yes") {
-        displayProducts()
+      clear()
+      display()
+      switch(answers.action) {
+        case "Add Item to Cart":
+          enterQuantity()
+          break;
+        case "Check Out":
+          console.log("Would you like to view your cart first?")
+          break;
+        case "Exit":
+          exit()
+          break;
+        default:
+          // code block
       }
-      else {exit()}
     });
 }
 
-
-var displayProducts = function () {
+//Display Products
+var display = function () {
   var query = "Select * FROM products";
   connection.query(query, function (err, res) {
     if (err) throw err;
@@ -67,14 +82,48 @@ var displayProducts = function () {
       ]);
     }
     console.log(displayTable.toString());
+    requestID()
   });
 };
 
+function requestID() {
+  inquirer
+    .prompt([
+      {
+        name: "IDrequest",
+        type: "input",
+        message: "Enter Item ID:",
+      },
+    ])
+    .then(function (answers) {
+      var query = "Select * FROM products";
+      connection.query(query, function (err, res) {
+        if (err) throw err;
+        var productArr = []
+        for (let i = 0; i < res.length - 1; i++) {
+          productArr.push(res[i].item_id);
+        }
+        if (productArr.includes(parseInt(answers.IDrequest))) {
+          clear()
+          display()
+          console.log("Item #" + answers.IDrequest + " is in stock")
+        } else {
+          clear()
+          display()
+          console.log("Error: Item #" + answers.IDrequest + " not found");
+        }
+      });
+    });
+}
 
+function enterQuantity() {
+
+}
+
+//Exit Store
 function exit() {
-  connection.end(function(err) {
-    //Clear console
-    clear();
+  connection.end(function (err) {
+    // The connection is terminated nowclear();
     //Thank you message
     var thankYouTable = new Table({ wordWrap: true });
     thankYouTable.push([
@@ -86,3 +135,6 @@ function exit() {
     console.log(thankYouTable.toString());
   });
 }
+
+
+
