@@ -23,7 +23,6 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   clear()
   welcome()
-  //console.log("Welcome to BAMAZON".random);
   mainPrompt()
 });
 
@@ -86,7 +85,7 @@ function mainPrompt() {
     .then(function (answers) {
       switch(answers.action) {
         case "Purchase Item":
-          requestID()
+          enterID()
           break;
         case "Exit":
           exit()
@@ -96,7 +95,7 @@ function mainPrompt() {
 }
 
 //Product ID Prompt
-function requestID() {
+function enterID() {
   inquirer
     .prompt([
       {
@@ -127,6 +126,7 @@ function requestID() {
       });
     });
 }
+
 //Quantity Prompt
 function enterQuantity(productID) {
   console.log(productID);
@@ -146,24 +146,61 @@ function enterQuantity(productID) {
     ])
     .then(function (input) {
       var quantityRequested = parseInt(input.quantity)
-      if (quantityRequested <= res[0].stock_quantity) {
-        console.log("Ready to Check out!")
+      var quantityAvailable = parseInt(res[0].stock_quantity)
+      if (quantityRequested <= 0) {
+        clear()
+        welcome()
+        console.log ("Error: Mininum quantity is 1")
+        mainPrompt()
+      }
+      else if (quantityRequested <= quantityAvailable) {
+        console.log("\n")
         return checkout(productID, quantityRequested)
       }
-      else if (quantityRequested > res[0].stock_quantity) {
-        console.log ("Insufficient quantity!")
+      else {
+        clear()
+        welcome()
+        console.log ("Error: Insufficient quantity!")
         mainPrompt()
       }
     });
 	});
 }
 
+//Adjust inventory & check out customer
 function checkout (productID, quantity){
-  console.log("TEST CHECKOUT");
-  console.log(productID);
-  console.log(quantity);
+  var query = 'SELECT * FROM products WHERE item_id=' + productID
+  connection.query(query, function(err,res){
+    if(err){console.log(err)};
+    var totalCost = res[0].price * quantity;
+    var displayTable = new Table({
+      head: [
+        "Item ID".green,
+        "Product Name".green,
+        "Price/Unit".green,
+        "Units Ordered".green,
+        "Amount Due".green
+      ],
+    });
+    for (var i = 0; i < res.length; i++) {
+      displayTable.push([
+        res[0].item_id,
+        res[0].product_name,
+        res[0].price,
+        quantity,
+        totalCost
+      ]);
+    }
+    console.log("\n\n\n\n\n");
+    console.log(displayTable.toString());
+    //console.log("\n\n\n\n\n");
+  });
+  connection.query("UPDATE products SET stock_quantity = stock_quantity - " + quantity + " WHERE item_id = " + productID, function(err,res){
+    if(err){console.log(err)};
+		console.log("Inventory updated!");
+  });
+  mainPrompt()
 }
-
 
 //Exit Store
 function exit() {
