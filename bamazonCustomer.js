@@ -22,44 +22,28 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
   clear()
-  console.log("Welcome to BAMAZON".random);
+  welcome()
+  //console.log("Welcome to BAMAZON".random);
   mainPrompt()
 });
 
 var cart = []
 
-//Greet Customer
-function mainPrompt() {
-  inquirer
-    .prompt([
-      {
-        name: "action",
-        type: "list",
-        message: "Select an action:",
-        choices: ["Add Item to Cart", "Check Out", "Exit"],
-      },
-    ])
-    .then(function (answers) {
-      clear()
-      display()
-      switch(answers.action) {
-        case "Add Item to Cart":
-          enterQuantity()
-          break;
-        case "Check Out":
-          console.log("Would you like to view your cart first?")
-          break;
-        case "Exit":
-          exit()
-          break;
-        default:
-          // code block
-      }
-    });
+function welcome () {
+  var thankYouTable = new Table({ wordWrap: true });
+        thankYouTable.push([
+          {
+            hAlign: "center",
+            content: "Welcome to BAMAZON".random
+          },
+        ]);
+        console.log("\n\n\n\n\n");
+        console.log(thankYouTable.toString());
+        console.log("\n\n\n\n\n");
 }
 
 //Display Products
-var display = function () {
+function display() {
   var query = "Select * FROM products";
   connection.query(query, function (err, res) {
     if (err) throw err;
@@ -81,11 +65,37 @@ var display = function () {
         res[i].stock_quantity,
       ]);
     }
+    console.log("\n\n\n\n\n");
     console.log(displayTable.toString());
-    requestID()
+    console.log("\n\n\n\n\n");
   });
 };
 
+//Main Prompt
+function mainPrompt() {
+  display()
+  inquirer
+    .prompt([
+      {
+        name: "action",
+        type: "list",
+        message: "Select an action:",
+        choices: ["Purchase Item", "Exit"],
+      },
+    ])
+    .then(function (answers) {
+      switch(answers.action) {
+        case "Purchase Item":
+          requestID()
+          break;
+        case "Exit":
+          exit()
+          break;
+      }
+    });
+}
+
+//Product ID Prompt
 function requestID() {
   inquirer
     .prompt([
@@ -105,20 +115,55 @@ function requestID() {
         }
         if (productArr.includes(parseInt(answers.IDrequest))) {
           clear()
+          welcome()
           display()
-          console.log("Item #" + answers.IDrequest + " is in stock")
+          enterQuantity(answers.IDrequest)
         } else {
           clear()
-          display()
+          welcome()
+          mainPrompt()
           console.log("Error: Item #" + answers.IDrequest + " not found");
         }
       });
     });
 }
-
-function enterQuantity() {
-
+//Quantity Prompt
+function enterQuantity(productID) {
+  console.log(productID);
+  var query = 'SELECT * FROM products WHERE item_id=' + productID
+  connection.query(query, function(err,res){
+    console.log(res[0].product_name + " is in stock!");
+    console.log("There are " + res[0].stock_quantity + " unit/s available");
+    console.log("How many would you like to purchase?")
+    inquirer
+    .prompt([
+      {
+        name: "quantity",
+        type: "input",
+        message: "Enter quantity:",
+        filter: Number
+      },
+    ])
+    .then(function (input) {
+      var quantityRequested = parseInt(input.quantity)
+      if (quantityRequested <= res[0].stock_quantity) {
+        console.log("Ready to Check out!")
+        return checkout(productID, quantityRequested)
+      }
+      else if (quantityRequested > res[0].stock_quantity) {
+        console.log ("Insufficient quantity!")
+        mainPrompt()
+      }
+    });
+	});
 }
+
+function checkout (productID, quantity){
+  console.log("TEST CHECKOUT");
+  console.log(productID);
+  console.log(quantity);
+}
+
 
 //Exit Store
 function exit() {
